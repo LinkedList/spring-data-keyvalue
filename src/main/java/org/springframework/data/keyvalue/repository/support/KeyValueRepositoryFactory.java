@@ -137,6 +137,36 @@ public class KeyValueRepositoryFactory extends RepositoryFactorySupport {
 	}
 
 	/**
+	 * Get the {@link KeyValueOperations} the repository operates on.
+	 * 
+	 * @return never {@literal null}.
+	 * @since 1.1
+	 */
+	protected KeyValueOperations getKeyValueOperations() {
+		return keyValueOperations;
+	}
+
+	/**
+	 * Get the {@link MappingContext} the repository operates on.
+	 * 
+	 * @return never {@literal null}.
+	 * @since 1.1
+	 */
+	protected MappingContext<?, ?> getMappingContext() {
+		return context;
+	}
+
+	/**
+	 * Get the concrete type of the {@link AbstractQueryCreator}.
+	 * 
+	 * @return never {@literal null}.
+	 * @since 1.1
+	 */
+	protected Class<? extends AbstractQueryCreator<?, ?>> getQueryCreator() {
+		return queryCreator;
+	}
+
+	/**
 	 * @author Christoph Strobl
 	 * @author Oliver Gierke
 	 */

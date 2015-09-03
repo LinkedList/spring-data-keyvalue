@@ -62,6 +62,26 @@ public class KeyValueRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
 		return new KeyValueRepositoryFactory(this.operations, this.queryCreator);
 	}
 
+	/**
+	 * Get the {@link KeyValueOperations} to be used for creating {@link KeyValueRepositoryFactory}.
+	 * 
+	 * @return can be {@literal null}.
+	 * @since 1.1
+	 */
+	protected KeyValueOperations getOperations() {
+		return operations;
+	}
+
+	/**
+	 * Get the concrete type of {@link AbstractQueryCreator} for creating {@link KeyValueRepositoryFactory}.
+	 * 
+	 * @return
+	 * @since 1.1
+	 */
+	protected Class<? extends AbstractQueryCreator<?, ?>> getQueryCreator() {
+		return queryCreator;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#afterPropertiesSet()

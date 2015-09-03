@@ -47,6 +47,7 @@ public class KeyValuePartTreeQuery implements RepositoryQuery {
 	private final QueryMethod queryMethod;
 	private final KeyValueOperations keyValueOperations;
 	private final Class<? extends AbstractQueryCreator<?, ?>> queryCreator;
+	private QueryInitialization queryInitialization = QueryInitialization.CACHED;
 
 	private KeyValueQuery<?> query;
 
@@ -57,11 +58,6 @@ public class KeyValuePartTreeQuery implements RepositoryQuery {
 		this.keyValueOperations = keyValueOperations;
 		this.evaluationContextProvider = evalContextProvider;
 		this.queryCreator = queryCreator;
-	}
-
-	@Override
-	public QueryMethod getQueryMethod() {
-		return queryMethod;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -102,11 +98,16 @@ public class KeyValuePartTreeQuery implements RepositoryQuery {
 
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(getQueryMethod().getParameters(), parameters);
 
-		if (this.query == null) {
-			this.query = createQuery(accessor);
+		KeyValueQuery<?> queryToUse = this.query;
+
+		if (queryToUse == null || QueryInitialization.NEW.equals(this.queryInitialization)) {
+			queryToUse = createQuery(accessor);
+			if (QueryInitialization.CACHED.equals(this.queryInitialization)) {
+				this.query = queryToUse;
+			}
 		}
 
-		KeyValueQuery<?> q = new KeyValueQuery(this.query.getCritieria());
+		KeyValueQuery<?> q = new KeyValueQuery(queryToUse.getCritieria());
 
 		if (accessor.getPageable() != null) {
 			q.setOffset(accessor.getPageable().getOffset());
@@ -119,7 +120,7 @@ public class KeyValuePartTreeQuery implements RepositoryQuery {
 		if (accessor.getSort() != null) {
 			q.setSort(accessor.getSort());
 		} else {
-			q.setSort(this.query.getSort());
+			q.setSort(queryToUse.getSort());
 		}
 
 		if (q.getCritieria() instanceof SpelExpression) {
@@ -138,5 +139,36 @@ public class KeyValuePartTreeQuery implements RepositoryQuery {
 		Constructor<? extends AbstractQueryCreator<?, ?>> constructor = (Constructor<? extends AbstractQueryCreator<?, ?>>) ClassUtils
 				.getConstructorIfAvailable(queryCreator, PartTree.class, ParameterAccessor.class);
 		return (KeyValueQuery<?>) BeanUtils.instantiateClass(constructor, tree, accessor).createQuery();
+	}
+
+	/**
+	 * Set the {@link QueryInitialization} to be used. In case of {@link QueryInitialization#CACHED} the query will only
+	 * be created only once.
+	 * 
+	 * @param queryInitialization can be {@literal null} and defaults to {@link QueryInitialization#CACHED}.
+	 * @since 1.1
+	 */
+	public void setQueryIntialization(QueryInitialization queryInitialization) {
+		this.queryInitialization = queryInitialization == null ? QueryInitialization.CACHED : queryInitialization;
+	}
+
+	@Override
+	public QueryMethod getQueryMethod() {
+		return queryMethod;
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.1
+	 */
+	public enum QueryInitialization {
+		/**
+		 * {@link KeyValueQuery} is created only once. Should be used for external parameter binding.
+		 */
+		CACHED,
+		/**
+		 * Forces {@link KeyValueQuery} to be created new on every execution.
+		 */
+		NEW
 	}
 }
